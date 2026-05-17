@@ -1,32 +1,33 @@
 #!/bin/bash
 
-# Generate REALITY keys robustly
-KEYPAIR=$(/usr/local/bin/xray x25519)
-PRIVATE_KEY=$(echo "$KEYPAIR" | grep -i "private" | awk '{print $NF}')
-PUBLIC_KEY=$(echo "$KEYPAIR" | grep -i "public" | awk '{print $NF}')
-SHORT_ID=$(openssl rand -hex 8)
+# Generate UUID
+UUID=$(xray uuid)
 
-# Safety check to prevent container crash if key generation fails
-if [ -z "$PRIVATE_KEY" ] || [ -z "$PUBLIC_KEY" ]; then
-    echo "CRITICAL ERROR: Failed to generate or parse Xray keys."
-    echo "Raw output was: $KEYPAIR"
-    sleep infinity # Keep container alive for debugging
+# Inject UUID into config
+sed -i "s/UUID_PLACEHOLDER/$UUID/g" /etc/xray/config.json
+
+# Determine the Codespace Domain
+if [ -n "$CODESPACE_NAME" ] && [ -n "$GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN" ]; then
+    DOMAIN="${CODESPACE_NAME}-443.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}"
+elif [ -n "$CODESPACE_NAME" ]; then
+    DOMAIN="${CODESPACE_NAME}-443.app.github.dev"
+else
+    DOMAIN="YOUR_CODESPACE_DOMAIN"
 fi
 
-# Inject keys into config
-sed -i "s/PRIVATE_KEY_PLACEHOLDER/$PRIVATE_KEY/g" /etc/xray/g2ray.json
-sed -i "s/SHORT_ID_PLACEHOLDER/$SHORT_ID/g" /etc/xray/g2ray.json
+# Build Connection String
+LINK="vless://${UUID}@${DOMAIN}:443?type=ws&security=tls&path=%2Fxray#Codespace-WS"
 
-# Extract IP (Fallback to Codespace name if IP isn't easily reachable)
-SERVER_IP=$(curl -s https://api.ipify.org || echo "YOUR_SERVER_IP")
-UUID=$(jq -r '.inbounds[0].settings.clients[0].id' /etc/xray/g2ray.json)
+echo "================================================================"
+echo "SUCCESS! Xray is starting."
+echo "Here is your VLESS+WS Link:"
+echo "$LINK"
+echo "================================================================"
 
-# Create connection string
-LINK="vless://${UUID}@${SERVER_IP}:443?encryption=none&security=reality&type=xhttp&mode=packet-up&pbk=${PUBLIC_KEY}&sid=${SHORT_ID}&sni=google.com&fp=chrome&path=%2F#g2ray"
-
-# Print and save link
-echo -e "\n[g2ray] Connection string:\n$LINK\n"
-echo "echo -e '\n[g2ray] Connection string:\n$LINK\n'" >> /etc/bash.bashrc
+# Save to bashrc so you can see it if you open a new terminal
+echo "echo ''" >> /etc/bash.bashrc
+echo "echo 'Your VLESS Link:'" >> /etc/bash.bashrc
+echo "echo '$LINK'" >> /etc/bash.bashrc
 
 # Start Xray
-exec /usr/local/bin/xray run -c /etc/xray/g2ray.json
+exec xray -c /etc/xray/config.json
