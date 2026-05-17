@@ -1,36 +1,29 @@
 #!/bin/bash
 
-# 1. Install Xray binary if it doesn't exist
-if ! command -v xray &> /dev/null; then
-    sudo apt-get update -y && sudo apt-get install -y wget unzip
-    wget -qO xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
-    unzip -qo xray.zip -d /tmp/xray
-    sudo mv /tmp/xray/xray /usr/local/bin/
-    sudo chmod +x /usr/local/bin/xray
-    rm -rf xray.zip /tmp/xray
+# Kill any existing x-ui processes
+sudo pkill -f x-ui
+
+# Create necessary directories
+sudo mkdir -p /usr/local/x-ui
+sudo mkdir -p /etc/x-ui
+
+# Download and extract 3x-ui if it's not already there
+if [ ! -f "/usr/local/x-ui/x-ui" ]; then
+    echo "Downloading 3x-ui..."
+    wget -qO x-ui.tar.gz https://github.com/MHSanaei/3x-ui/releases/latest/download/x-ui-linux-amd64.tar.gz
+    sudo tar -zxvf x-ui.tar.gz -C /usr/local/
+    rm x-ui.tar.gz
+    sudo chmod +x /usr/local/x-ui/x-ui
 fi
 
-# 2. Setup configuration directory
-sudo mkdir -p /etc/xray
+# Start 3x-ui in the background
+echo "Starting 3x-ui..."
+cd /usr/local/x-ui
+sudo nohup ./x-ui > /tmp/xui.log 2>&1 &
 
-# 3. Create a fresh UUID or use existing one
-if [ ! -f "/etc/xray/config.json" ]; then
-    UUID=$(cat /proc/sys/kernel/random/uuid)
-    sudo cp .devcontainer/config.json /etc/xray/config.json
-    sudo sed -i "s/UUID_PLACEHOLDER/$UUID/g" /etc/xray/config.json
-else
-    # Extract the UUID if the file already exists
-    UUID=$(grep -oP '(?<="id": ")[^"]*' /etc/xray/config.json)
-fi
-
-# 4. Generate the real Codespace Domain
-DOMAIN="${CODESPACE_NAME}-8080.app.github.dev"
-
-# 5. Output the link to a file in your workspace
-echo "vless://${UUID}@${DOMAIN}:443?type=ws&security=tls&path=%2Fxray#Codespace-Automated" > VLESS_LINK.txt
-
-# 6. Kill any existing Xray processes (useful if restarting codespace)
-sudo pkill xray || true
-
-# 7. Start Xray in the background
-nohup sudo xray run -c /etc/xray/config.json > /tmp/xray.log 2>&1 &
+# Output the Panel URL
+echo "========================================="
+echo "3x-ui Panel URL: https://${CODESPACE_NAME}-2053.app.github.dev"
+echo "Username: admin"
+echo "Password: admin"
+echo "========================================="
