@@ -1,30 +1,13 @@
 {
-  "name": "g2ray",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": "."
-  },
-  "overrideCommand": false,
-  "features": {
-    "ghcr.io/devcontainers/features/common-utils:2": {
-      "installZsh": false
-    },
-    "ghcr.io/devcontainers/features/github-cli:1": {
-      "version": "latest"
-    }
-  },
-  "postAttachCommand": {
-    "expose": "gh codespace ports visibility 443:public -c $CODESPACE_NAME"
-  },
+  "name": "Xray Proxy",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "forwardPorts": [8080],
   "portsAttributes": {
-    "443": {
-      "label": "g2ray",
-      "protocol": "tcp",
-      "onAutoForward": "silent"
+    "8080": {
+      "label": "Xray VLESS",
+      "protocol": "https",
+      "visibility": "public"
     }
   },
-  "forwardPorts": [443],
-  "hostRequirements": {
-    "cpus": 2
-  }
+  "postStartCommand": "bash .devcontainer/start.sh"
 }
