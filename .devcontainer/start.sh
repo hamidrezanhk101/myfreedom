@@ -1,33 +1,43 @@
 #!/bin/bash
 
-# Generate UUID
-UUID=$(xray uuid)
-
-# Inject UUID into config
-sed -i "s/UUID_PLACEHOLDER/$UUID/g" /etc/xray/config.json
-
-# Determine the Codespace Domain
-if [ -n "$CODESPACE_NAME" ] && [ -n "$GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN" ]; then
-    DOMAIN="${CODESPACE_NAME}-443.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}"
-elif [ -n "$CODESPACE_NAME" ]; then
-    DOMAIN="${CODESPACE_NAME}-443.app.github.dev"
-else
-    DOMAIN="YOUR_CODESPACE_DOMAIN"
+# 1. Install Xray binary if it doesn't exist
+if ! command -v xray &> /dev/null; then
+    echo "Downloading and installing Xray..."
+    sudo apt-get update -y && sudo apt-get install -y wget unzip
+    wget -qO xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
+    unzip -qo xray.zip -d /tmp/xray
+    sudo mv /tmp/xray/xray /usr/local/bin/
+    sudo chmod +x /usr/local/bin/xray
+    rm -rf xray.zip /tmp/xray
 fi
 
-# Build Connection String
-LINK="vless://${UUID}@${DOMAIN}:443?type=ws&security=tls&path=%2Fxray#Codespace-WS"
+# 2. Setup configuration directory
+sudo mkdir -p /etc/xray
 
-echo "================================================================"
+# 3. Create a fresh UUID or use existing one
+if [ ! -f "/etc/xray/config.json" ]; then
+    UUID=$(cat /proc/sys/kernel/random/uuid)
+    sudo cp ./.devcontainer/config.json /etc/xray/config.json
+    sudo sed -i "s/UUID_PLACEHOLDER/$UUID/g" /etc/xray/config.json
+else
+    # Extract the UUID if the file already exists
+    UUID=$(grep -oP '(?<="id": ")[^"]*' /etc/xray/config.json)
+fi
+
+# 4. Generate the real Codespace Domain dynamically
+# GitHub automatically provides the $CODESPACE_NAME variable
+DOMAIN="${CODESPACE_NAME}-8080.app.github.dev"
+
+echo "=================================================================="
 echo "SUCCESS! Xray is starting."
-echo "Here is your VLESS+WS Link:"
-echo "$LINK"
-echo "================================================================"
+echo "Here is your REAL VLESS+WS Link:"
+echo ""
+echo "vless://${UUID}@${DOMAIN}:443?type=ws&security=tls&path=%2Fxray#Codespace-WS"
+echo ""
+echo "=================================================================="
+echo "IMPORTANT: Open the 'Ports' tab in VS Code and ensure Port 8080"
+echo "Visibility is set to 'Public' by right-clicking it!"
+echo "=================================================================="
 
-# Save to bashrc so you can see it if you open a new terminal
-echo "echo ''" >> /etc/bash.bashrc
-echo "echo 'Your VLESS Link:'" >> /etc/bash.bashrc
-echo "echo '$LINK'" >> /etc/bash.bashrc
-
-# Start Xray
-exec xray -c /etc/xray/config.json
+# 5. Start Xray
+sudo xray run -c /etc/xray/config.json
