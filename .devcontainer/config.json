@@ -18,6 +18,13 @@
       },
       "streamSettings": {
         "network": "xhttp",
+        "security": "reality",
+        "realitySettings": {
+          "dest": "yahoo.com:443",
+          "serverNames": ["yahoo.com", "www.yahoo.com"],
+          "privateKey": "PRIVATE_KEY_PLACEHOLDER",
+          "shortIds": ["SHORT_ID_PLACEHOLDER"]
+        },
         "xhttpSettings": {
           "mode": "packet-up",
           "path": "/"
