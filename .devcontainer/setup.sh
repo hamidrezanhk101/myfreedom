@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-RELEASE="https://github.com/XTLS/Xray-core/releases/download/v26.3.27/Xray-linux-64.zip"
+RELEASE="https://github.com/XTLS/Xray-core/releases/download/${XRAY_VERSION}/Xray-linux-64.zip"
 TMPDIR="$(mktemp -d)"
 
 curl -sL "$RELEASE" -o "$TMPDIR/xray.zip"
