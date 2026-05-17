@@ -1,10 +1,14 @@
 {
-  "name": "Xray Proxy",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-  "forwardPorts": [8080],
+  "forwardPorts": [2053, 8080],
   "portsAttributes": {
+    "2053": {
+      "label": "3x-ui Panel",
+      "protocol": "https",
+      "visibility": "public"
+    },
     "8080": {
-      "label": "Xray VLESS",
+      "label": "Proxy Connection",
       "protocol": "https",
       "visibility": "public"
     }
