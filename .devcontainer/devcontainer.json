@@ -4,12 +4,13 @@
   "portsAttributes": {
     "2053": {
       "label": "3x-ui Panel",
-      "protocol": "https",
-      "visibility": "public"
+      "onAutoForward": "ignore"
     },
     "8080": {
-      "label": "Proxy Connection",
-      "protocol": "https",
+      "label": "Proxy Port",
+      "onAutoForward": "ignore"
+    },
+    ".*": {
       "visibility": "public"
     }
   },
