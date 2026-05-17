@@ -22,7 +22,7 @@ SERVER_IP=$(curl -s https://api.ipify.org || echo "YOUR_SERVER_IP")
 UUID=$(jq -r '.inbounds[0].settings.clients[0].id' /etc/xray/g2ray.json)
 
 # Create connection string
-LINK="vless://${UUID}@${SERVER_IP}:443?encryption=none&security=reality&type=xhttp&mode=packet-up&pbk=${PUBLIC_KEY}&sid=${SHORT_ID}&sni=yahoo.com&fp=chrome&path=%2F#g2ray"
+LINK="vless://${UUID}@${SERVER_IP}:443?encryption=none&security=reality&type=xhttp&mode=packet-up&pbk=${PUBLIC_KEY}&sid=${SHORT_ID}&sni=google.com&fp=chrome&path=%2F#g2ray"
 
 # Print and save link
 echo -e "\n[g2ray] Connection string:\n$LINK\n"
