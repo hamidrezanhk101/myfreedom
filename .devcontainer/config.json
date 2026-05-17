@@ -20,8 +20,8 @@
         "network": "xhttp",
         "security": "reality",
         "realitySettings": {
-          "dest": "yahoo.com:443",
-          "serverNames": ["yahoo.com", "www.yahoo.com"],
+          "dest": "google.com:443",
+          "serverNames": ["google.com", "www.google.com"],
           "privateKey": "PRIVATE_KEY_PLACEHOLDER",
           "shortIds": ["SHORT_ID_PLACEHOLDER"]
         },
